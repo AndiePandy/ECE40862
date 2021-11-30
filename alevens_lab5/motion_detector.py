@@ -21,7 +21,7 @@ def http_get(url):
     addr = socket.getaddrinfo(host, 80)[0][-1]
     s = socket.socket()
     s.connect(addr)
-    s.send(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
+m    s.send(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
     #while True:
     #    data = s.recv(100)
     #    if data:
@@ -31,7 +31,9 @@ def http_get(url):
     s.close()
     
 def thingspeak_timer(i):
-    print('checking thingspeak") # please get rid of 
+    # read data from Thingspeak
+    print("checking thingspeak") # please get rid of
+    #http_get("https://api.thingspeak.com/channels/1583988/fields/1.json?api_key=FJVB6CAQ1GB79AKH&results=2") # ERROR with http_get
 
 ############## 3.2 Software Init ###################
 # Init LEDS, Timers, Interrupts (if needed)        #
@@ -80,9 +82,9 @@ i2c.writeto_mem(acm_addr, 0x2D, b'\x08')
 ###########################################################
 # x and y should be 0g, z should be 1g to account for gravity
 # I calculated that z should be set to 64 base 10 (double check)
-i2c.writeto_mem(acm_addr, 0x1E, 0x00) # x
-i2c.writeto_mem(acm_addr, 0x1F, 0x00) # y
-i2c.writeto_mem(acm_addr, 0x20, 0x40) # z
+i2c.writeto_mem(acm_addr, 0x1E, b'0x00') # x
+i2c.writeto_mem(acm_addr, 0x1F, b'0x00') # y
+i2c.writeto_mem(acm_addr, 0x20, b'0x40') # z
 
 print("Accelerometer has been calibrated.")
 
