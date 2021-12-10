@@ -1,5 +1,5 @@
-import time, network, ntptime, esp32, machine, socket, sys
-from machine import Pin, RTC, TouchPad, Timer, wake_reason, SoftI2C       
+import time, network, ntptime, esp32, machine, socket, sys, urequests
+from machine import Pin, RTC, TouchPad, Timer, wake_reason, I2C       
 
 ################### Functions ###################
 # Connect to Internet and print local IP (Lab 3)
@@ -14,27 +14,13 @@ def connect(ssid, password):
     print('IP Address:', wlan.ifconfig()[0])
     print('')
     
-# HTTP GET request as described in the micropython documentation
-def http_get(url):
-    import socket
-    _, _, host, path = url.split('/', 3)
-    addr = socket.getaddrinfo(host, 80)[0][-1]
-    s = socket.socket()
-    s.connect(addr)
-m    s.send(bytes('GET /%s HTTP/1.0\r\nHost: %s\r\n\r\n' % (path, host), 'utf8'))
-    #while True:
-    #    data = s.recv(100)
-    #    if data:
-    #        print(str(data, 'utf8'), end='')
-    #    else:
-    #        break
-    s.close()
-    
-def thingspeak_timer(i):
+def status_timer(API_KEY_READ):
     # read data from Thingspeak
-    print("checking thingspeak") # please get rid of
-    #http_get("https://api.thingspeak.com/channels/1583988/fields/1.json?api_key=FJVB6CAQ1GB79AKH&results=2") # ERROR with http_get
-
+    print("checking sensor status")
+    #http_get("https://api.thingspeak.com/channels/1583988/status.json?api_key="+API_KEY_READ) # ERROR with http_get
+    #req = urequests.get("https://api.thingspeak.com/channels/1583988/status.json?api_key=FJVB6CAQ1GB79AKH")
+    req = urequests.get("https://api.thingspeak.com/channels/1583988/fields/1/last?key="+API_KEY_READ)
+    print(req)
 ############## 3.2 Software Init ###################
 # Init LEDS, Timers, Interrupts (if needed)        #
 # use I2C driver to communicate with Accelerometer #
@@ -44,12 +30,12 @@ led_green = Pin(27, Pin.OUT) # Onboard GREEN LED is connected to IO_27
 led_red.value(0)             # should be off when init
 led_green.value(0)           # should be off when init
 
-timer_thingspeak = Timer(0)
+timer_status = Timer(0)  # init hardware timer to check if activated
 
-i2c = SoftI2C(scl=Pin(22, Pin.PULL_UP), sda=Pin(23, Pin.PULL_UP)) # create I2C bus
+i2c = I2C(1, scl=Pin(22, Pin.PULL_UP), sda=Pin(23, Pin.PULL_UP)) # create I2C bus
 
 ############## 3.3.1 Initialize Accelerometer ################
-# check Device ID
+# check Device ID                                            #
 # configure the following settings in the ADXL3343 using I2C #
 ##############################################################
 # get accelerometer addr
@@ -78,7 +64,7 @@ i2c.writeto_mem(acm_addr, 0x2C, b'\x0c')
 i2c.writeto_mem(acm_addr, 0x2D, b'\x08')
 
 ############## 3.3.2 Calibrate Accelerometer ##############
-# calibrate for when device is flat and still             #                                                         
+#       calibrate for when device is flat and still       #                                                         
 ###########################################################
 # x and y should be 0g, z should be 1g to account for gravity
 # I calculated that z should be set to 64 base 10 (double check)
@@ -91,13 +77,16 @@ print("Accelerometer has been calibrated.")
 ############## 4 IFTTT and ThingSpeak ##############
 # 
 ####################################################
+API_KEY_READ = "FJVB6CAQ1GB79AKH"
+API_KEY_WRITE = "OJMQEMI54VYJ9VJX" # in IFTTT applet 1
 
 # connect to internet and print local IP (From Lab 3)
 connect('Andie', 'alevens1')
 
 # check if Motion Sensor is activated or not by reading data from ThingSpeak
 # Hardware Timer every 30 seconds
-API_KEY_READ = "FJVB6CAQ1GB79AKH"
-timer_thingspeak.init(period=30000, mode=Timer.PERIODIC, callback= lambda t: thingspeak_timer(1))
+
+timer_status.init(period=30000, mode=Timer.PERIODIC, callback= lambda t: status_timer(API_KEY_READ))
+
 
 
