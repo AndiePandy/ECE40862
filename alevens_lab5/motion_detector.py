@@ -16,11 +16,30 @@ def connect(ssid, password):
     
 def status_timer(API_KEY_READ):
     # read data from Thingspeak
-    print("checking sensor status")
     #http_get("https://api.thingspeak.com/channels/1583988/status.json?api_key="+API_KEY_READ) # ERROR with http_get
     #req = urequests.get("https://api.thingspeak.com/channels/1583988/status.json?api_key=FJVB6CAQ1GB79AKH")
     req = urequests.get("https://api.thingspeak.com/channels/1583988/fields/1/last?key="+API_KEY_READ)
-    print(req)
+    global status
+    if (req.text == "activate"):
+        status = "activate"
+        led_green.value(1)
+    elif (req.text == "deactivate"):
+        status = "deactivate"
+        led_green.value(0)
+    req.close()
+
+def notify_timer(acm_addr):
+    # send notifications to IFTTT
+    
+    val1=str(25)
+    val2=str(19)
+    val3=str(6)
+    
+    url = "https://maker.ifttt.com/trigger/Motion_Detected/with/key/lxy3OOOO7S4awuW_M69tXwShf837rVsTbrqLbZDBSlL?value1="+val1+"&value2="+val2+"&value3="+val3
+    req = urequests.post(url)
+    req.close()
+
+
 ############## 3.2 Software Init ###################
 # Init LEDS, Timers, Interrupts (if needed)        #
 # use I2C driver to communicate with Accelerometer #
@@ -34,6 +53,7 @@ timer_status = Timer(0)  # init hardware timer to check if activated
 
 i2c = I2C(1, scl=Pin(22, Pin.PULL_UP), sda=Pin(23, Pin.PULL_UP)) # create I2C bus
 
+status = "deactivate"
 ############## 3.3.1 Initialize Accelerometer ################
 # check Device ID                                            #
 # configure the following settings in the ADXL3343 using I2C #
@@ -85,8 +105,14 @@ connect('Andie', 'alevens1')
 
 # check if Motion Sensor is activated or not by reading data from ThingSpeak
 # Hardware Timer every 30 seconds
-
 timer_status.init(period=30000, mode=Timer.PERIODIC, callback= lambda t: status_timer(API_KEY_READ))
+
+timer_uh = Timer(2)
+timer_uh.init(period=30000, mode=Timer.PERIODIC, callback= lambda t: print(status))
+
+timer_notify = Timer (1)
+timer_notify.init(period=10000, mode=Timer.PERIODIC, callback= lambda t: notify_timer(acm_addr))
+
 
 
 
