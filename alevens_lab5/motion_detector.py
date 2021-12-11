@@ -16,8 +16,6 @@ def connect(ssid, password):
     
 def status_timer(API_KEY_READ):
     # read data from Thingspeak
-    #http_get("https://api.thingspeak.com/channels/1583988/status.json?api_key="+API_KEY_READ) # ERROR with http_get
-    #req = urequests.get("https://api.thingspeak.com/channels/1583988/status.json?api_key=FJVB6CAQ1GB79AKH")
     req = urequests.get("https://api.thingspeak.com/channels/1583988/fields/1/last?key="+API_KEY_READ)
     global status
     if (req.text == "activate"):
@@ -30,14 +28,13 @@ def status_timer(API_KEY_READ):
 
 def notify_timer(acm_addr):
     # send notifications to IFTTT
-    
-    val1=str(25)
-    val2=str(19)
-    val3=str(6)
-    
-    url = "https://maker.ifttt.com/trigger/Motion_Detected/with/key/lxy3OOOO7S4awuW_M69tXwShf837rVsTbrqLbZDBSlL?value1="+val1+"&value2="+val2+"&value3="+val3
-    req = urequests.post(url)
-    req.close()
+    val1=25
+    val2=19
+    val3=6
+    if (status=="activate" and (val1 > 0 or val2 > 0 or val3 > 0)):
+        url = "https://maker.ifttt.com/trigger/Motion_Detected/with/key/lxy3OOOO7S4awuW_M69tXwShf837rVsTbrqLbZDBSlL?value1="+str(val1)+"&value2="+str(val2)+"&value3="+str(val3)
+        req = urequests.post(url)
+        req.close()
 
 
 ############## 3.2 Software Init ###################
