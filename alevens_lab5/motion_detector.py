@@ -42,7 +42,7 @@ def notify_timer(acm_addr):
     val3 = (val3/256)
     
     
-    if (status=="activate" and (val1 > 1 or val2 > 1 or val3 > 2)):
+    if (status=="activate" and (val1 > 0.8 or val2 > 0.8 or val3 > 1.8)):
         led_red.value(1)
         url = "https://maker.ifttt.com/trigger/Motion_Detected/with/key/lxy3OOOO7S4awuW_M69tXwShf837rVsTbrqLbZDBSlL?value1="+str(val1)+"&value2="+str(val2)+"&value3="+str(val3)
         req = urequests.post(url)
@@ -107,8 +107,6 @@ val2 = unpack( '>h', val2 )[0]
 val3= i2c.readfrom_mem(acm_addr, 0x37, 1) + i2c.readfrom_mem(acm_addr, 0x36, 1)
 val3 = unpack( '>h', val3 )[0]
 
-
-
 val1 = hex(int(val1/256))
 val2 = hex(int(val2/256))
 val3 = hex(int(val3/256))
@@ -116,8 +114,6 @@ val3 = hex(int(val3/256))
 i2c.writeto_mem(acm_addr, 0x1E, val1) # x
 i2c.writeto_mem(acm_addr, 0x1F, val2) # y
 i2c.writeto_mem(acm_addr, 0x20, val3) # z
-
-
 
 print("Accelerometer has been calibrated.")
 
